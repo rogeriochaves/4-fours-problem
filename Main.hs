@@ -1,5 +1,6 @@
 import Data.Maybe (listToMaybe)
 import Control.Applicative ((<$>))
+import System.Environment (getArgs)
 
 type Value = Double
 
@@ -60,3 +61,6 @@ possibleCombinations2 opsnum = [ op x y | op <- doubleops, x <- (possibleCombina
 
 findOperationWithFourResultingIn x = listToMaybe [ op | op <- possibleCombinations2 1, result op == x, foursCount [op] == 4 ]
 
+main = do
+  number <- getArgs
+  print $ findOperationWithFourResultingIn $ read $ head number
