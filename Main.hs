@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 import Data.Maybe (listToMaybe)
 import Control.Applicative ((<$>))
 
@@ -35,7 +33,7 @@ eval (Factorial x)        = (foursCount [x]   , product [1..(result x)])
 eval (SquareRoot x)       = (foursCount [x]   , sqrt (result x))
 eval (Termial x)          = (foursCount [x]   , sum [1..(result x)])
 
-instance Show (Operation Value) where
+instance Show (Operation a) where
   show Four                 = "4"
   show (Sum x y)            = "(" ++ (show x) ++ " + " ++ (show y) ++ ")"
   show (Minus x y)          = "(" ++ (show x) ++ " - " ++ (show y) ++ ")"
@@ -54,7 +52,7 @@ foursCount :: [Operation Value] -> Int
 foursCount ops = sum ((fst . eval) <$> ops)
 
 possibleCombinations1 :: [Operation Value]
-possibleCombinations1 = [Four] ++ [ x y | x <- singleops, y <- noops ]
+possibleCombinations1 = noops ++ [ x y | x <- singleops, y <- noops ]
 
 possibleCombinations2 :: Int -> [Operation Value]
 possibleCombinations2 0      = [ op x y | op <- doubleops, x <- possibleCombinations1, y <- possibleCombinations1 ]
