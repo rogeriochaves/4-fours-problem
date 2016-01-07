@@ -65,11 +65,11 @@ possibleCombinations2 opsnum = [ op x y | op <- doubleops,
                                           x <- possibleCombinations1 ++ possibleCombinations2 (opsnum - 1),
                                           y <- possibleCombinations1 ++ possibleCombinations2 (opsnum - 1) ]
 
+findOperationWithFourResultingIn :: Value -> Maybe (Operation Value)
+findOperationWithFourResultingIn x = listToMaybe [ op | op <- possibleCombinations2 1,
+                                                        eval op == x,
+                                                        foursCount op == 4 ]
 
 main = do
   number <- getArgs
   print $ findOperationWithFourResultingIn $ read $ head number
-
-findOperationWithFourResultingIn x = listToMaybe [ op | op <- possibleCombinations2 1,
-                                                        eval op == x,
-                                                        foursCount op == 4 ]
