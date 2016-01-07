@@ -19,20 +19,29 @@ noops = [Four]
 singleops = [Factorial, SquareRoot, Termial]
 doubleops = [Sum, Minus, Division, Multiplication, Pow, Root]
 
-type AmountOfFours = Int
-type Result = (AmountOfFours, Value)
+eval :: Operation Value -> Value
+eval Four                 = 4
+eval (Sum x y)            = eval x + eval y
+eval (Minus x y)          = eval x - eval y
+eval (Division x y)       = eval x / eval y
+eval (Multiplication x y) = eval x * eval y
+eval (Pow x y)            = eval x ** eval y
+eval (Root x y)           = eval x ** (1 / (eval y))
+eval (Factorial x)        = product [1..(eval x)]
+eval (SquareRoot x)       = sqrt (eval x)
+eval (Termial x)          = sum [1..(eval x)]
 
-eval :: Operation Value -> Result
-eval Four                 = (1, 4)
-eval (Sum x y)            = (foursCount [x, y], result x + result y)
-eval (Minus x y)          = (foursCount [x, y], result x - result y)
-eval (Division x y)       = (foursCount [x, y], result x / result y)
-eval (Multiplication x y) = (foursCount [x, y], result x * result y)
-eval (Pow x y)            = (foursCount [x, y], result x ** result y)
-eval (Root x y)           = (foursCount [x, y], result x ** (1 / (result y)))
-eval (Factorial x)        = (foursCount [x]   , product [1..(result x)])
-eval (SquareRoot x)       = (foursCount [x]   , sqrt (result x))
-eval (Termial x)          = (foursCount [x]   , sum [1..(result x)])
+foursCount :: Operation Value -> Int
+foursCount Four                 = 1
+foursCount (Sum x y)            = foursCount x + foursCount y
+foursCount (Minus x y)          = foursCount x + foursCount y
+foursCount (Division x y)       = foursCount x + foursCount y
+foursCount (Multiplication x y) = foursCount x + foursCount y
+foursCount (Pow x y)            = foursCount x + foursCount y
+foursCount (Root x y)           = foursCount x + foursCount y
+foursCount (Factorial x)        = foursCount x
+foursCount (SquareRoot x)       = foursCount x
+foursCount (Termial x)          = foursCount x
 
 instance Show (Operation a) where
   show Four                 = "4"
@@ -46,12 +55,6 @@ instance Show (Operation a) where
   show (SquareRoot x)       = "√" ++ (show x)
   show (Termial x)          = (show x) ++ "?"
 
-result :: Operation Value -> Value
-result = snd . eval
-
-foursCount :: [Operation Value] -> Int
-foursCount ops = sum ((fst . eval) <$> ops)
-
 possibleCombinations1 :: [Operation Value]
 possibleCombinations1 = noops ++ [ x y | x <- singleops, y <- noops ]
 
@@ -59,7 +62,7 @@ possibleCombinations2 :: Int -> [Operation Value]
 possibleCombinations2 0      = [ op x y | op <- doubleops, x <- possibleCombinations1, y <- possibleCombinations1 ]
 possibleCombinations2 opsnum = [ op x y | op <- doubleops, x <- (possibleCombinations1 ++ possibleCombinations2 (opsnum - 1)), y <- (possibleCombinations1 ++ possibleCombinations2 (opsnum - 1)) ]
 
-findOperationWithFourResultingIn x = listToMaybe [ op | op <- possibleCombinations2 1, result op == x, foursCount [op] == 4 ]
+findOperationWithFourResultingIn x = listToMaybe [ op | op <- possibleCombinations2 1, eval op == x, foursCount op == 4 ]
 
 main = do
   number <- getArgs
