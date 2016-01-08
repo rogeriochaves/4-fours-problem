@@ -1,5 +1,4 @@
 import Data.Maybe (listToMaybe)
-import Control.Applicative ((<$>))
 import System.Environment (getArgs)
 
 type Value = Double
