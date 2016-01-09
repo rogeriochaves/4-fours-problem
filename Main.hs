@@ -1,58 +1,65 @@
 import Data.Maybe (listToMaybe)
 import System.Environment (getArgs)
+import Control.Applicative ((<$>))
 
 type Value = Double
 
-data Operation a = Four
-                 | Sum            (Operation a) (Operation a)
-                 | Minus          (Operation a) (Operation a)
-                 | Division       (Operation a) (Operation a)
-                 | Multiplication (Operation a) (Operation a)
-                 | Pow            (Operation a) (Operation a)
-                 | Root           (Operation a) (Operation a)
-                 | Factorial      (Operation a)
-                 | SquareRoot     (Operation a)
-                 | Termial        (Operation a)
+data Operation a = NoOp     NoOpOperator
+                 | SingleOp SingleOperator (Operation a)
+                 | DoubleOp DoubleOperator (Operation a) (Operation a)
 
-noops = [Four]
-singleops = [Factorial, SquareRoot, Termial]
-doubleops = [Sum, Minus, Division, Multiplication, Pow, Root]
+data NoOpOperator   = Four
+data SingleOperator = Factorial | SquareRoot | Termial
+data DoubleOperator = Sum | Minus | Division | Multiplication | Pow | Root
 
 eval :: Operation Value -> Value
-eval Four                 = 4
-eval (Sum x y)            = eval x + eval y
-eval (Minus x y)          = eval x - eval y
-eval (Division x y)       = eval x / eval y
-eval (Multiplication x y) = eval x * eval y
-eval (Pow x y)            = eval x ** eval y
-eval (Root x y)           = eval x ** (1 / eval y)
-eval (Factorial x)        = product [1..eval x]
-eval (SquareRoot x)       = sqrt (eval x)
-eval (Termial x)          = sum [1..eval x]
+eval (NoOp Four)       = 4
+eval (SingleOp op x)   = evalSingleOp op x
+eval (DoubleOp op x y) = evalDoubleOp op x y
+
+evalSingleOp :: SingleOperator -> Operation Value -> Value
+evalSingleOp Factorial  x = product [1..eval x]
+evalSingleOp SquareRoot x = sqrt (eval x)
+evalSingleOp Termial    x = sum [1..eval x]
+
+evalDoubleOp :: DoubleOperator -> Operation Value -> Operation Value -> Value
+evalDoubleOp Sum x y            = eval x + eval y
+evalDoubleOp Minus x y          = eval x - eval y
+evalDoubleOp Division x y       = eval x / eval y
+evalDoubleOp Multiplication x y = eval x * eval y
+evalDoubleOp Pow x y            = eval x ** eval y
+evalDoubleOp Root x y           = eval x ** (1 / eval y)
 
 foursCount :: Operation Value -> Int
-foursCount Four                 = 1
-foursCount (Sum x y)            = foursCount x + foursCount y
-foursCount (Minus x y)          = foursCount x + foursCount y
-foursCount (Division x y)       = foursCount x + foursCount y
-foursCount (Multiplication x y) = foursCount x + foursCount y
-foursCount (Pow x y)            = foursCount x + foursCount y
-foursCount (Root x y)           = foursCount x + foursCount y
-foursCount (Factorial x)        = foursCount x
-foursCount (SquareRoot x)       = foursCount x
-foursCount (Termial x)          = foursCount x
+foursCount (NoOp _)         = 1
+foursCount (SingleOp _ x)   = foursCount x
+foursCount (DoubleOp _ x y) = foursCount x + foursCount y
 
 instance Show (Operation a) where
-  show Four                 = "4"
-  show (Sum x y)            = "(" ++ show x ++ " + " ++ show y ++ ")"
-  show (Minus x y)          = "(" ++ show x ++ " - " ++ show y ++ ")"
-  show (Division x y)       = "(" ++ show x ++ " / " ++ show y ++ ")"
-  show (Multiplication x y) = "(" ++ show x ++ " * " ++ show y ++ ")"
-  show (Pow x y)            = "(" ++ show x ++ " ^ " ++ show y ++ ")"
-  show (Root x y)           = "(" ++ show x ++ "√ " ++ show y ++ ")"
-  show (Factorial x)        = show x ++ "!"
-  show (SquareRoot x)       = "√" ++ show x
-  show (Termial x)          = show x ++ "?"
+  show (NoOp op)               = show op
+  show (SingleOp SquareRoot x) = show SquareRoot ++ show x
+  show (SingleOp op x)         = show x ++ show op
+  show (DoubleOp op x y)       = "(" ++ show x ++ " " ++ show op ++ " " ++ show y ++ ")"
+
+instance Show NoOpOperator where
+  show Four = "4"
+
+instance Show SingleOperator where
+  show Factorial = "!"
+  show SquareRoot = "√"
+  show Termial = "?"
+
+instance Show DoubleOperator where
+  show Sum = "+"
+  show Minus = "-"
+  show Division = "/"
+  show Multiplication = "*"
+  show Pow = "^"
+  show Root = "√"
+
+noops     = NoOp     <$> [Four]
+singleops = SingleOp <$> [Factorial, SquareRoot, Termial]
+doubleops = DoubleOp <$> [Sum, Minus, Division, Multiplication, Pow, Root]
 
 possibleCombinations1 :: [Operation Value]
 possibleCombinations1 = noops ++ [ x y | x <- singleops, y <- noops ]
