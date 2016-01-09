@@ -3,6 +3,7 @@
 import Data.Maybe (listToMaybe, fromJust)
 import System.Environment (getArgs)
 import Control.Applicative ((<$>))
+import Data.List (transpose)
 
 type Value = Double
 
@@ -69,18 +70,33 @@ singleops = SingleOp <$> [Factorial, SquareRoot, Termial]
 doubleops = DoubleOp <$> [Sum, Minus, Division, Multiplication, Pow, Root]
 
 possibleCombinations1 :: Int -> [Operation Value]
-possibleCombinations1 0      = noops ++ [ x y | x <- singleops, y <- noops ]
-possibleCombinations1 opsnum = noops ++ [ x y | x <- singleops, y <- possibleCombinations1 (opsnum - 1) ]
+possibleCombinations1 0 = noops ++ [ x y | x <- singleops, y <- noops ]
+possibleCombinations1 1 = noops ++ [ x y | x <- singleops, y <- possibleCombinations1 0 ]
 
+-- this combines operations like this ((4 + 4) + 4) + 4)
 possibleCombinations2 :: Int -> [Operation Value]
-possibleCombinations2 0      = [ op x y | op <- doubleops,
-                                          x <- possibleCombinations1 1, y <- possibleCombinations1 1 ]
-possibleCombinations2 opsnum = [ op x y | op <- doubleops,
-                                          x <- possibleCombinations1 1 ++ possibleCombinations2 (opsnum - 1),
-                                          y <- possibleCombinations1 1 ++ possibleCombinations2 (opsnum - 1) ]
+possibleCombinations2 0 = [ op x y | op <- doubleops,
+                                      x <- possibleCombinations1 1, y <- possibleCombinations1 0 ]
+possibleCombinations2 1 = [ op x y | op <- doubleops,
+                                      x <- possibleCombinations2 0,
+                                      y <- possibleCombinations1 1 ]
+possibleCombinations2 2 = [ op x y | op <- doubleops,
+                                      x <- possibleCombinations2 1,
+                                      y <- possibleCombinations1 1 ]
+
+-- this combines operations like this ((4 + 4) + (4 + 4))
+possibleCombinations2' :: Int -> [Operation Value]
+possibleCombinations2' 0 = [ op x y | op <- doubleops,
+                                       x <- possibleCombinations1 1, y <- possibleCombinations1 0 ]
+possibleCombinations2' 1 = [ op x y | op <- doubleops,
+                                       x <- possibleCombinations2 0,
+                                       y <- possibleCombinations2 0 ]
+
+lazyMerge :: [[a]] -> [a]
+lazyMerge = concat . transpose
 
 findOperationWithFourResultingIn :: Value -> OperationResult Value
-findOperationWithFourResultingIn x = Result x $ listToMaybe [ op | op <- possibleCombinations2 1,
+findOperationWithFourResultingIn x = Result x $ listToMaybe [ op | op <- lazyMerge [possibleCombinations2 2, possibleCombinations2' 1],
                                                                    eval op == x,
                                                                    foursCount op == 4 ]
 
