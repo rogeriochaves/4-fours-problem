@@ -66,8 +66,8 @@ instance Show (OperationResult Value) where
   show (Result x r) = show (floor x :: Int) ++ " = " ++ show (fromJust r)
 
 noops     = NoOp     <$> [Four]
-singleops = SingleOp <$> [Factorial, SquareRoot, Termial]
-doubleops = DoubleOp <$> [Sum, Minus, Division, Multiplication, Pow, Root]
+singleops = SingleOp <$> [Termial, SquareRoot, Factorial]
+doubleops = DoubleOp <$> [Sum, Minus, Multiplication, Division, Pow, Root]
 
 possibleCombinations1 :: Int -> [Operation Value]
 possibleCombinations1 0 = noops ++ [ x y | x <- singleops, y <- noops ]
