@@ -1,4 +1,6 @@
-import Data.Maybe (listToMaybe)
+{-# LANGUAGE FlexibleInstances #-}
+
+import Data.Maybe (listToMaybe, fromJust)
 import System.Environment (getArgs)
 import Control.Applicative ((<$>))
 
@@ -11,6 +13,8 @@ data Operation a = NoOp     NoOpOperator
 data NoOpOperator   = Four
 data SingleOperator = Factorial | SquareRoot | Termial
 data DoubleOperator = Sum | Minus | Division | Multiplication | Pow | Root
+
+data OperationResult a = Result a (Maybe (Operation a))
 
 eval :: Operation Value -> Value
 eval (NoOp Four)       = 4
@@ -57,25 +61,32 @@ instance Show DoubleOperator where
   show Pow = "^"
   show Root = "√"
 
+instance Show (OperationResult Value) where
+  show (Result x r) = show (floor x :: Int) ++ " = " ++ show (fromJust r)
+
 noops     = NoOp     <$> [Four]
 singleops = SingleOp <$> [Factorial, SquareRoot, Termial]
 doubleops = DoubleOp <$> [Sum, Minus, Division, Multiplication, Pow, Root]
 
-possibleCombinations1 :: [Operation Value]
-possibleCombinations1 = noops ++ [ x y | x <- singleops, y <- noops ]
+possibleCombinations1 :: Int -> [Operation Value]
+possibleCombinations1 0      = noops ++ [ x y | x <- singleops, y <- noops ]
+possibleCombinations1 opsnum = noops ++ [ x y | x <- singleops, y <- possibleCombinations1 (opsnum - 1) ]
 
 possibleCombinations2 :: Int -> [Operation Value]
 possibleCombinations2 0      = [ op x y | op <- doubleops,
-                                          x <- possibleCombinations1, y <- possibleCombinations1 ]
+                                          x <- possibleCombinations1 1, y <- possibleCombinations1 1 ]
 possibleCombinations2 opsnum = [ op x y | op <- doubleops,
-                                          x <- possibleCombinations1 ++ possibleCombinations2 (opsnum - 1),
-                                          y <- possibleCombinations1 ++ possibleCombinations2 (opsnum - 1) ]
+                                          x <- possibleCombinations1 1 ++ possibleCombinations2 (opsnum - 1),
+                                          y <- possibleCombinations1 1 ++ possibleCombinations2 (opsnum - 1) ]
 
-findOperationWithFourResultingIn :: Value -> Maybe (Operation Value)
-findOperationWithFourResultingIn x = listToMaybe [ op | op <- possibleCombinations2 1,
-                                                        eval op == x,
-                                                        foursCount op == 4 ]
+findOperationWithFourResultingIn :: Value -> OperationResult Value
+findOperationWithFourResultingIn x = Result x $ listToMaybe [ op | op <- possibleCombinations2 1,
+                                                                   eval op == x,
+                                                                   foursCount op == 4 ]
 
 main = do
   number <- getArgs
-  print $ findOperationWithFourResultingIn $ read $ head number
+  if length number >= 2 then
+    mapM_ print $ findOperationWithFourResultingIn <$> [read (head number)..read (last number)]
+  else
+    print $ findOperationWithFourResultingIn $ read $ head number
