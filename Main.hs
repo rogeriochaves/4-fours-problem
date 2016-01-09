@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 
-import Data.Maybe (listToMaybe, fromJust)
+import Data.Maybe (listToMaybe)
 import System.Environment (getArgs)
 import Control.Applicative ((<$>))
 import Data.List (transpose)
@@ -63,7 +63,8 @@ instance Show DoubleOperator where
   show Root = "√"
 
 instance Show (OperationResult Value) where
-  show (Result x r) = show (floor x :: Int) ++ " = " ++ show (fromJust r)
+  show (Result x Nothing)  = show (floor x :: Int) ++ " = Nothing"
+  show (Result x (Just r)) = show (floor x :: Int) ++ " = " ++ show r
 
 noops     = NoOp     <$> [Four]
 singleops = SingleOp <$> [Termial, SquareRoot, Factorial]
