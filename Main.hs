@@ -4,6 +4,7 @@ import Data.Maybe (listToMaybe)
 import System.Environment (getArgs)
 import Control.Applicative ((<$>))
 import Data.List (transpose)
+import Control.Parallel.Strategies
 
 type Value = Double
 
@@ -104,6 +105,6 @@ findOperationWithFourResultingIn x = Result x $ listToMaybe [ op | op <- lazyMer
 main = do
   number <- getArgs
   if length number >= 2 then
-    mapM_ print $ findOperationWithFourResultingIn <$> [read (head number)..read (last number)]
+    mapM_ putStrLn $ parMap rdeepseq show $ findOperationWithFourResultingIn <$> [read (head number)..read (last number)]
   else
     print $ findOperationWithFourResultingIn $ read $ head number
